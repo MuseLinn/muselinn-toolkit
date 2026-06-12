@@ -1,23 +1,22 @@
 #!/usr/bin/env node
-// muselinn-toolkit check — audit Claude Code environment
-// Outputs JSON to stdout for the check.md command to analyse
+// muselinn-toolkit check — full Claude Code environment audit
+// Outputs JSON for the check.md command to analyse
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
 const HOME = os.homedir();
-const CLAUDE = path.join(HOME, '.claude');
+const C = p => path.join(HOME, '.claude', p);
 
-// Garage plugins (hardcoded — match marketplace.json)
 const GARAGE_PLUGINS = [
   'deepseek-statusline',
   'patent-disclosure-skill',
   'nature-skills',
   'gpt-image-2',
+  'muselinn-toolkit',
 ];
 
-// Recommended official plugins
 const OFFICIAL_PLUGINS = [
   { name: 'plugin-dev', marketplace: 'claude-plugins-official' },
   { name: 'mcp-server-dev', marketplace: 'claude-plugins-official' },
@@ -31,73 +30,135 @@ const OFFICIAL_PLUGINS = [
 
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
 
-// Find installed plugin versions from cache
-function findInstalled() {
+// ── plugins ──────────────────────────────────────────────────────────────────
+function findPlugins() {
   const plugins = {};
-  const cacheDir = path.join(CLAUDE, 'plugins', 'cache');
-  if (!fs.existsSync(cacheDir)) return plugins;
-  for (const mp of fs.readdirSync(cacheDir)) {
-    const mpPath = path.join(cacheDir, mp);
-    if (!fs.statSync(mpPath).isDirectory()) continue;
-    for (const pkg of fs.readdirSync(mpPath)) {
-      const pkgPath = path.join(mpPath, pkg);
-      if (!fs.statSync(pkgPath).isDirectory()) continue;
-      for (const ver of fs.readdirSync(pkgPath)) {
-        const vp = path.join(pkgPath, ver, '.claude-plugin', 'plugin.json');
+  const cd = C('plugins/cache');
+  if (!fs.existsSync(cd)) return plugins;
+  for (const mp of fs.readdirSync(cd)) {
+    const mpP = path.join(cd, mp);
+    if (!fs.statSync(mpP).isDirectory()) continue;
+    for (const pkg of fs.readdirSync(mpP)) {
+      const pkP = path.join(mpP, pkg);
+      if (!fs.statSync(pkP).isDirectory()) continue;
+      for (const ver of fs.readdirSync(pkP)) {
+        const vp = path.join(pkP, ver, '.claude-plugin', 'plugin.json');
         const pj = rjson(vp);
-        if (pj) plugins[pj.name] = { version: pj.version, path: vp, marketplace: mp };
+        if (pj) plugins[pj.name] = { version: pj.version, marketplace: mp };
       }
     }
   }
   return plugins;
 }
 
-// Check settings.json
+// ── marketplaces ─────────────────────────────────────────────────────────────
+function findMarketplaces() {
+  const mps = [];
+  const md = C('plugins/marketplaces');
+  if (!fs.existsSync(md)) return mps;
+  for (const mp of fs.readdirSync(md)) {
+    const mf = path.join(md, mp, '.claude-plugin', 'marketplace.json');
+    const mj = rjson(mf);
+    if (mj) mps.push({ name: mj.name, pluginCount: (mj.plugins || []).length, path: mf });
+  }
+  return mps;
+}
+
+// ── MCP servers ──────────────────────────────────────────────────────────────
+function findMcpServers() {
+  const servers = [];
+  // .mcp.json (project/user)
+  const mcpJson = rjson(path.join(HOME, '.mcp.json'));
+  if (mcpJson && mcpJson.mcpServers) {
+    for (const [name, cfg] of Object.entries(mcpJson.mcpServers)) {
+      servers.push({ name, type: cfg.type || cfg.command ? 'stdio' : 'http', source: '.mcp.json' });
+    }
+  }
+  // ~/.claude.json (user scope)
+  const claudeJson = rjson(C('..', '.claude.json'));
+  if (claudeJson) {
+    const projects = claudeJson.projects || {};
+    for (const [proj, cfg] of Object.entries(projects)) {
+      const ss = cfg.mcpServers || {};
+      for (const [name, sc] of Object.entries(ss)) {
+        servers.push({ name, type: sc.type || 'http', source: '~/.claude.json (' + path.basename(proj) + ')' });
+      }
+    }
+  }
+  return servers;
+}
+
+// ── standalone skills ────────────────────────────────────────────────────────
+function findStandaloneSkills() {
+  const skills = [];
+  const sd = C('skills');
+  if (!fs.existsSync(sd)) return skills;
+  for (const s of fs.readdirSync(sd)) {
+    const sp = path.join(sd, s);
+    if (fs.statSync(sp).isDirectory() && fs.existsSync(path.join(sp, 'SKILL.md'))) {
+      skills.push(s);
+    } else if (fs.statSync(sp).isSymbolicLink()) {
+      skills.push(s + ' (symlink)');
+    }
+  }
+  return skills;
+}
+
+// ── settings ─────────────────────────────────────────────────────────────────
 function checkSettings() {
-  const sf = rjson(path.join(CLAUDE, 'settings.json'));
-  if (!sf) return { hasSettings: false, statusLine: false, deepseek: false, hasToken: false };
+  const sf = rjson(C('settings.json'));
+  if (!sf) return { hasSettings: false };
+  const env = sf.env || {};
   return {
     hasSettings: true,
     statusLine: !!(sf.statusLine && sf.statusLine.command),
-    deepseek: (sf.env && sf.env.ANTHROPIC_BASE_URL || '').includes('deepseek'),
-    hasToken: !!(sf.env && sf.env.ANTHROPIC_AUTH_TOKEN),
+    deepseek: (env.ANTHROPIC_BASE_URL || '').includes('deepseek'),
+    hasToken: !!(env.ANTHROPIC_AUTH_TOKEN),
+    model: env.ANTHROPIC_MODEL || '',
+    hasImageKey: !!(env.OPENAI_IMAGE_API_KEY),
+    enabledPlugins: Object.keys(sf.enabledPlugins || {}),
+    effort: sf.effortLevel || 'default',
   };
 }
 
-// Check marketplaces
-function checkMarketplace() {
-  const mp = rjson(path.join(CLAUDE, 'plugins', 'marketplaces', 'muselinn-garage', '.claude-plugin', 'marketplace.json'));
-  return !!mp;
-}
-
-// Check if statusline.js exists
+// ── statusline.js ────────────────────────────────────────────────────────────
 function checkStatusline() {
-  return fs.existsSync(path.join(CLAUDE, 'statusline.js'));
+  const sp = C('statusline.js');
+  if (!fs.existsSync(sp)) return { exists: false };
+  const src = fs.readFileSync(sp, 'utf8');
+  const vMatch = src.match(/Edition \(v(\d+)\)/);
+  return { exists: true, version: vMatch ? 'v' + vMatch[1] : 'unknown', size: src.length };
 }
 
-const installed = findInstalled();
+// ── gather ───────────────────────────────────────────────────────────────────
+const plugins = findPlugins();
+const marketplaces = findMarketplaces();
+const mcpServers = findMcpServers();
+const standaloneSkills = findStandaloneSkills();
 const settings = checkSettings();
-const hasGarage = checkMarketplace();
-const hasStatusline = checkStatusline();
+const statusline = checkStatusline();
 
-// Build report
 const garageReport = GARAGE_PLUGINS.map(name => ({
-  name,
-  installed: !!installed[name],
-  version: installed[name] ? installed[name].version : null,
+  name, installed: !!plugins[name], version: plugins[name] ? plugins[name].version : null,
 }));
 
 const officialReport = OFFICIAL_PLUGINS.map(p => ({
-  ...p,
-  installed: !!installed[p.name],
-  version: installed[p.name] ? installed[p.name].version : null,
+  ...p, installed: !!plugins[p.name], version: plugins[p.name] ? plugins[p.name].version : null,
 }));
 
 console.log(JSON.stringify({
-  garage_marketplace: hasGarage,
-  statusline_exists: hasStatusline,
+  summary: {
+    garagePlugins: garageReport.filter(p => p.installed).length + '/' + GARAGE_PLUGINS.length,
+    officialPlugins: officialReport.filter(p => p.installed).length + '/' + OFFICIAL_PLUGINS.length,
+    marketplaces: marketplaces.length,
+    mcpServers: mcpServers.length,
+    standaloneSkills: standaloneSkills.length,
+  },
   settings,
+  statusline,
+  marketplaces,
+  mcp_servers: mcpServers,
+  standalone_skills: standaloneSkills,
   garage_plugins: garageReport,
   official_plugins: officialReport,
-  all_installed: Object.keys(installed),
 }, null, 2));
