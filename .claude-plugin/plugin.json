@@ -1,0 +1,10 @@
+{
+  "name": "muselinn-toolkit",
+  "version": "0.1.0",
+  "description": "Claude Code environment management — check setup, sync plugins, audit config",
+  "author": { "name": "MuseLinn", "url": "https://github.com/MuseLinn" },
+  "repository": "https://github.com/MuseLinn/muselinn-toolkit",
+  "license": "MIT",
+  "keywords": ["setup", "check", "audit", "environment", "sync"],
+  "commands": ["./commands/check.md"]
+}
