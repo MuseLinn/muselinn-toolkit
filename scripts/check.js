@@ -95,11 +95,12 @@ function findStandaloneSkills() {
   if (!fs.existsSync(sd)) return skills;
   for (const s of fs.readdirSync(sd)) {
     const sp = path.join(sd, s);
-    if (fs.statSync(sp).isDirectory() && fs.existsSync(path.join(sp, 'SKILL.md'))) {
-      skills.push(s);
-    } else if (fs.statSync(sp).isSymbolicLink()) {
-      skills.push(s + ' (symlink)');
-    }
+    try {
+      const st = fs.lstatSync(sp);
+      if (st.isDirectory() && !st.isSymbolicLink() && fs.existsSync(path.join(sp, 'SKILL.md'))) {
+        skills.push(s);
+      }
+    } catch {}
   }
   return skills;
 }
@@ -115,7 +116,7 @@ function checkSettings() {
     deepseek: (env.ANTHROPIC_BASE_URL || '').includes('deepseek'),
     hasToken: !!(env.ANTHROPIC_AUTH_TOKEN),
     model: env.ANTHROPIC_MODEL || '',
-    hasImageKey: !!(env.OPENAI_IMAGE_API_KEY),
+    hasImageKey: !!(env.OPENAI_IMAGE_API_KEY || ((rjson(C('settings.local.json')) || {}).env || {}).OPENAI_IMAGE_API_KEY),
     enabledPlugins: Object.keys(sf.enabledPlugins || {}),
     effort: sf.effortLevel || 'default',
   };
