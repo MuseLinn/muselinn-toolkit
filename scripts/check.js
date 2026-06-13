@@ -31,7 +31,10 @@ const OFFICIAL_PLUGINS = [
 
 // Recommended standalone skills (installed via npx skills add, not plugins)
 const RECOMMENDED_SKILLS = [
+  { name: 'find-skills', source: 'vercel-labs/skills', description: 'Meta-skill — discover and install other skills' },
   { name: 'fpga', source: 'mindrally/skills', description: 'FPGA development — Vivado, SystemVerilog, timing closure, AXI' },
+  { name: 'vercel-react-best-practices', source: 'vercel-labs/agent-skills', description: 'React & Next.js performance optimization from Vercel' },
+  { name: 'remotion-best-practices', source: 'remotion-dev/skills', description: 'Remotion video framework best practices' },
 ];
 
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }

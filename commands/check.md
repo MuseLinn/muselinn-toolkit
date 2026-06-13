@@ -43,8 +43,18 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 - `settings.json` env.ANTHROPIC_AUTH_TOKEN present?
 - `~/.claude/statusline.js` exists?
 
+### Recommended Standalone Skills (npx skills add)
+| Skill | Source | Installed |
+|---|---|---|
+| find-skills | vercel-labs/skills | yes/no |
+| fpga | mindrally/skills | yes/no |
+| vercel-react-best-practices | vercel-labs/agent-skills | yes/no |
+| remotion-best-practices | remotion-dev/skills | yes/no |
+
+For missing skills, suggest: `npx -y skills add <source> --skill <name> --agent claude-code -g`
+
 ### Recommended Actions
-List specific `claude plugin install/uninstall` commands to fix gaps. List config fixes needed.
+List specific `claude plugin install/uninstall` commands to fix gaps. List `npx skills add` commands for missing skills. List config fixes needed.
 
 3. **Output a concise summary**:
 ```
