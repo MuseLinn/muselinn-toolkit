@@ -29,6 +29,11 @@ const OFFICIAL_PLUGINS = [
   { name: 'nature-skills', marketplace: 'nature-skills' },
 ];
 
+// Recommended standalone skills (installed via npx skills add, not plugins)
+const RECOMMENDED_SKILLS = [
+  { name: 'fpga', source: 'mindrally/skills', description: 'FPGA development — Vivado, SystemVerilog, timing closure, AXI' },
+];
+
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
 
 // ── plugins ──────────────────────────────────────────────────────────────────
@@ -148,10 +153,15 @@ const officialReport = OFFICIAL_PLUGINS.map(p => ({
   ...p, installed: !!plugins[p.name], version: plugins[p.name] ? plugins[p.name].version : null,
 }));
 
+const skillsReport = RECOMMENDED_SKILLS.map(s => ({
+  ...s, installed: standaloneSkills.includes(s.name),
+}));
+
 console.log(JSON.stringify({
   summary: {
     garagePlugins: garageReport.filter(p => p.installed).length + '/' + GARAGE_PLUGINS.length,
     officialPlugins: officialReport.filter(p => p.installed).length + '/' + OFFICIAL_PLUGINS.length,
+    recommendedSkills: skillsReport.filter(s => s.installed).length + '/' + RECOMMENDED_SKILLS.length,
     marketplaces: marketplaces.length,
     mcpServers: mcpServers.length,
     standaloneSkills: standaloneSkills.length,
@@ -163,4 +173,5 @@ console.log(JSON.stringify({
   standalone_skills: standaloneSkills,
   garage_plugins: garageReport,
   official_plugins: officialReport,
+  recommended_skills: skillsReport,
 }, null, 2));
