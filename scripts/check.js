@@ -126,6 +126,25 @@ function findStandaloneSkills() {
   return skills;
 }
 
+// ── MATLAB toolkit ───────────────────────────────────────────────────────────
+function checkMatlab() {
+  const root = path.join(HOME, '.matlab', 'agentic-toolkits');
+  const mcp = path.join(root, 'bin', 'matlab-mcp-server.exe');
+  const mcpVer = fs.existsSync(mcp) ? '(found)' : '(missing)';
+  // Check marketplace for version
+  const mp = rjson(path.join(root, 'marketplace.json'));
+  let matlab = 'unknown', simulink = 'unknown';
+  if (mp && mp.plugins) {
+    for (const p of mp.plugins) {
+      if (p.version) {
+        if (p.name === 'matlab-agentic-toolkit-setup') matlab = p.version;
+        else if (p.name === 'simulink-agentic-toolkit-setup') simulink = p.version;
+      }
+    }
+  }
+  return { mcpServer: mcpVer, matlabVer: matlab, simulinkVer: simulink };
+}
+
 // ── settings ─────────────────────────────────────────────────────────────────
 function checkSettings() {
   const sf = rjson(C('settings.json'));
@@ -159,6 +178,7 @@ const mcpServers = findMcpServers();
 const standaloneSkills = findStandaloneSkills();
 const settings = checkSettings();
 const statusline = checkStatusline();
+const matlab = checkMatlab();
 
 const garageReport = GARAGE_PLUGINS.map(name => ({
   name, installed: !!plugins[name], version: plugins[name] ? plugins[name].version : null,
@@ -188,6 +208,7 @@ console.log(JSON.stringify({
   },
   settings,
   statusline,
+  matlab,
   marketplaces,
   mcp_servers: mcpServers,
   standalone_skills: standaloneSkills,
