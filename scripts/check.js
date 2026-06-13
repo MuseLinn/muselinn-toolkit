@@ -35,6 +35,7 @@ const RECOMMENDED_SKILLS = [
   { name: 'fpga', source: 'mindrally/skills', description: 'FPGA development — Vivado, SystemVerilog, timing closure, AXI' },
   { name: 'vercel-react-best-practices', source: 'vercel-labs/agent-skills', description: 'React & Next.js performance optimization from Vercel' },
   { name: 'remotion-best-practices', source: 'remotion-dev/skills', description: 'Remotion video framework best practices' },
+  { name: 'claude-to-im', source: 'op7418/Claude-to-IM-skill', description: 'Bridge Claude Code to Telegram/Discord/Feishu/QQ/WeChat — remote via mobile' },
 ];
 
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
