@@ -43,14 +43,13 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 - `settings.json` env.ANTHROPIC_AUTH_TOKEN present?
 - `~/.claude/statusline.js` exists?
 
-### MATLAB Toolkit Plugins (20 expected)
-| Group | Installed |
-|---|---|
-| ai-and-statistics, automotive, computational-biology, ... | yes/no / N/20 |
+### MATLAB / Simulink Toolkit
+Check the `matlab` field in the JSON output:
+- `mcpServer: found/missing` — MCP binary status
+- `matlabVer` / `simulinkVer` — toolkit versions
 
-For missing plugins, suggest: `claude plugin install <name>@matlab-agentic-toolkits`
-For updates: run `setupAgenticToolkit("update")` in MATLAB, then `/plugin marketplace update matlab-agentic-toolkits`
-For full reinstall: `setupAgenticToolkit("install")` then `setupAgenticToolkit("configure")` in MATLAB
+If missing: run `setupAgenticToolkit("install")` then `setupAgenticToolkit("configure")` in MATLAB.
+If updates available: `setupAgenticToolkit("update")` in MATLAB, then `/plugin marketplace update matlab-agentic-toolkits`.
 
 ### Recommended Standalone Skills (npx skills add)
 | Skill | Source | Installed |
