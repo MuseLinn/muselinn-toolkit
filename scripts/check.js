@@ -26,6 +26,7 @@ const OFFICIAL_PLUGINS = [
   { name: 'feature-dev', marketplace: 'claude-plugins-official' },
   { name: 'document-skills', marketplace: 'anthropic-agent-skills' },
   { name: 'obsidian', marketplace: 'obsidian-skills' },
+  { name: 'nature-skills', marketplace: 'nature-skills' },
 ];
 
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
