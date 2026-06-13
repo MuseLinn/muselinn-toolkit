@@ -29,6 +29,17 @@ const OFFICIAL_PLUGINS = [
   { name: 'nature-skills', marketplace: 'nature-skills' },
 ];
 
+// MATLAB toolkit plugins (from matlab-agentic-toolkits marketplace)
+const MATLAB_PLUGINS = [
+  'ai-and-statistics', 'automotive', 'computational-biology',
+  'image-processing-and-computer-vision', 'matlab-app-building', 'matlab-core',
+  'matlab-data-import-and-analysis', 'matlab-programming', 'matlab-software-development',
+  'parallel-computing', 'radar', 'reporting-and-database-access',
+  'rf-and-mixed-signal', 'robotics-and-autonomous-systems', 'signal-processing',
+  'test-and-measurement', 'wireless-communications', 'toolkit',
+  'model-based-design-core', 'model-based-system-engineering',
+];
+
 // Recommended standalone skills (installed via npx skills add, not plugins)
 const RECOMMENDED_SKILLS = [
   { name: 'find-skills', source: 'vercel-labs/skills', description: 'Meta-skill — discover and install other skills' },
@@ -157,6 +168,10 @@ const officialReport = OFFICIAL_PLUGINS.map(p => ({
   ...p, installed: !!plugins[p.name], version: plugins[p.name] ? plugins[p.name].version : null,
 }));
 
+const matlabReport = MATLAB_PLUGINS.map(name => ({
+  name, installed: !!plugins[name],
+}));
+
 const skillsReport = RECOMMENDED_SKILLS.map(s => ({
   ...s, installed: standaloneSkills.includes(s.name),
 }));
@@ -165,6 +180,7 @@ console.log(JSON.stringify({
   summary: {
     garagePlugins: garageReport.filter(p => p.installed).length + '/' + GARAGE_PLUGINS.length,
     officialPlugins: officialReport.filter(p => p.installed).length + '/' + OFFICIAL_PLUGINS.length,
+    matlabPlugins: matlabReport.filter(p => p.installed).length + '/' + MATLAB_PLUGINS.length,
     recommendedSkills: skillsReport.filter(s => s.installed).length + '/' + RECOMMENDED_SKILLS.length,
     marketplaces: marketplaces.length,
     mcpServers: mcpServers.length,
@@ -177,5 +193,6 @@ console.log(JSON.stringify({
   standalone_skills: standaloneSkills,
   garage_plugins: garageReport,
   official_plugins: officialReport,
+  matlab_plugins: matlabReport,
   recommended_skills: skillsReport,
 }, null, 2));
