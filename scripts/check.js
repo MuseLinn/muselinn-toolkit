@@ -10,7 +10,7 @@ const HOME = os.homedir();
 const C = p => path.join(HOME, '.claude', p);
 
 const GARAGE_PLUGINS = [
-  'deepseek-statusline',
+  'claude-code-statusline',
   'patent-disclosure-skill',
   'nature-skills',
   'gpt-image-2',

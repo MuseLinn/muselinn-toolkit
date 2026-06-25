@@ -20,7 +20,7 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 ### Plugins from Garage (should be installed)
 | Plugin | Installed | Version | Latest | Status |
 |---|---|---|---|---|
-| deepseek-statusline | yes/no | x.y.z | x.y.z | OK / Update available / Missing |
+| claude-code-statusline | yes/no | x.y.z | x.y.z | OK / Update available / Missing |
 | patent-disclosure-skill | | | | |
 | nature-skills | | | | |
 | gpt-image-2 | | | | |
