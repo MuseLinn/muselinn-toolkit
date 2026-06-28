@@ -1,9 +1,9 @@
 ---
 name: check
-description: Audit Claude Code setup — check installed plugins, skills, version consistency, and config health against muselinn-garage
+description: Audit & fix Claude Code setup — scan plugins/skills/config, then interactively install missing items
 ---
 
-Run a full environment health check:
+Run a full environment health check, then let the user choose what to fix:
 
 1. **Run the checker script** to gather raw data:
 
@@ -11,63 +11,64 @@ Run a full environment health check:
 node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 ```
 
-2. **Analyze the JSON output** and present findings in a structured report:
+2. **Analyze the JSON output** and identify what's missing or outdated:
 
 ### Garage Marketplace
-- Is `MuseLinn/muselinn-garage` added as a marketplace? If not, recommend adding it.
+- Is `MuseLinn/muselinn-garage` added? If not → `claude plugin marketplace add MuseLinn/muselinn-garage`
 - Run `claude plugin marketplace update muselinn-garage` to fetch latest.
 
-### Plugins from Garage (should be installed)
-| Plugin | Installed | Version | Status |
-|---|---|---|---|
-| claude-code-statusline | yes/no | x.y.z | OK / Update available / Missing |
-| patent-disclosure-skill | | | |
-| gpt-image-2 | | | |
-| muselinn-toolkit | | | |
-| kimi-vision-mcp | | | |
+### Missing Items Summary
+From the JSON, build a list of what needs attention:
 
-### Plugins from Official Sources (recommended)
-| Plugin | Marketplace | Installed |
+| Category | Item | Action |
 |---|---|---|
-| plugin-dev | claude-plugins-official | yes/no |
-| mcp-server-dev | claude-plugins-official | yes/no |
-| pr-review-toolkit | claude-plugins-official | yes/no |
-| hookify | claude-plugins-official | yes/no |
-| commit-commands | claude-plugins-official | yes/no |
-| feature-dev | claude-plugins-official | yes/no |
-| document-skills | anthropic-agent-skills | yes/no |
-| obsidian | obsidian-skills | yes/no |
+| plugin | claude-code-statusline | install / update |
+| plugin | patent-disclosure-skill | install |
+| ... | ... | ... |
+| skill | find-skills | npx skills add |
+| config | statusline.js missing | copy from plugin |
+| config | opencode go config | set up auth cookie |
 
 ### Config Health
 - `settings.json` statusLine configured?
-- `settings.json` env.ANTHROPIC_BASE_URL — provider detection (deepseek-direct / opencode-go-proxy / anthropic-direct / custom-proxy)
-- `settings.json` env.ANTHROPIC_AUTH_TOKEN present?
 - `~/.claude/statusline.js` exists?
-- `~/.claude/statusline-config.json` opencode go config present? (if opencode go enabled)
+- `~/.claude/statusline-config.json` for opencode go?
+- provider detection: deepseek-direct / opencode-go-proxy / anthropic-direct / custom-proxy
 
 ### MATLAB / Simulink Toolkit
-Check the `matlab` field in the JSON output:
-- `mcpServer: found/missing` — MCP binary status
-- `matlabVer` / `simulinkVer` — toolkit versions
+Check the `matlab` field:
+- `mcpServer: found/missing`
+- `matlabVer` / `simulinkVer`
 
-If missing: run `setupAgenticToolkit("install")` then `setupAgenticToolkit("configure")` in MATLAB.
-If updates available: `setupAgenticToolkit("update")` in MATLAB, then `/plugin marketplace update matlab-agentic-toolkits`.
+If missing: `setupAgenticToolkit("install")` then `setupAgenticToolkit("configure")` in MATLAB.
 
-### Recommended Standalone Skills (npx skills add)
-| Skill | Source | Installed |
-|---|---|---|
-| find-skills | vercel-labs/skills | yes/no |
-| markitdown | julianobarbosa/claude-code-skills | yes/no |
-| fpga | mindrally/skills | yes/no |
-| vercel-react-best-practices | vercel-labs/agent-skills | yes/no |
+3. **Ask the user interactively** which items to install or fix:
 
-For missing skills, suggest: `npx -y skills add <source> --skill <name> --agent claude-code -g`
+```
+AskUserQuestion:
+  Which items do you want to install/fix?
+  Options (multi-select):
+  □ claude-code-statusline (missing)
+  □ patent-disclosure-skill (missing)
+  □ gpt-image-2 (update available: 0.2.0 → 0.3.0)
+  □ find-skills (missing)
+  □ markitdown (missing)
+  □ [Recommended Actions]
+```
 
-### Recommended Actions
-List specific `claude plugin install/uninstall` commands to fix gaps. List `npx skills add` commands for missing skills. List config fixes needed.
+Use AskUserQuestion with multiSelect for this. Group related items. Only show items that are actually missing/outdated.
 
-3. **Output a concise summary**:
+4. **Execute selected actions** — run the appropriate commands for each selected item:
+
+- Plugin install: `claude plugin install <name>`
+- Skill install: `npx -y skills add <source> --skill <name> --agent claude-code -g`
+- Config fix: use `Edit` to write the config file
+- Statusline copy: `cp "${CLAUDE_PLUGIN_ROOT}/statusline.js" "${HOME}/.claude/statusline.js"`
+- MATLAB toolkit setup: guide the user to run MATLAB commands
+
+5. **After execution**, run the checker script again and show a concise summary:
+
 ```
 ✅ All good (N/N plugins installed, all config OK)
-⚠️ N issues found: [list]
+⚠️ N issues remaining: [list]
 ```
