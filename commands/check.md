@@ -18,12 +18,13 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 - Run `claude plugin marketplace update muselinn-garage` to fetch latest.
 
 ### Plugins from Garage (should be installed)
-| Plugin | Installed | Version | Latest | Status |
-|---|---|---|---|---|
-| claude-code-statusline | yes/no | x.y.z | x.y.z | OK / Update available / Missing |
-| patent-disclosure-skill | | | | |
-| nature-skills | | | | |
-| gpt-image-2 | | | | |
+| Plugin | Installed | Version | Status |
+|---|---|---|---|
+| claude-code-statusline | yes/no | x.y.z | OK / Update available / Missing |
+| patent-disclosure-skill | | | |
+| gpt-image-2 | | | |
+| muselinn-toolkit | | | |
+| kimi-vision-mcp | | | |
 
 ### Plugins from Official Sources (recommended)
 | Plugin | Marketplace | Installed |
@@ -39,9 +40,10 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/check.js
 
 ### Config Health
 - `settings.json` statusLine configured?
-- `settings.json` env.ANTHROPIC_BASE_URL set to DeepSeek?
+- `settings.json` env.ANTHROPIC_BASE_URL — provider detection (deepseek-direct / opencode-go-proxy / anthropic-direct / custom-proxy)
 - `settings.json` env.ANTHROPIC_AUTH_TOKEN present?
 - `~/.claude/statusline.js` exists?
+- `~/.claude/statusline-config.json` opencode go config present? (if opencode go enabled)
 
 ### MATLAB / Simulink Toolkit
 Check the `matlab` field in the JSON output:
@@ -55,9 +57,9 @@ If updates available: `setupAgenticToolkit("update")` in MATLAB, then `/plugin m
 | Skill | Source | Installed |
 |---|---|---|
 | find-skills | vercel-labs/skills | yes/no |
+| markitdown | julianobarbosa/claude-code-skills | yes/no |
 | fpga | mindrally/skills | yes/no |
 | vercel-react-best-practices | vercel-labs/agent-skills | yes/no |
-| remotion-best-practices | remotion-dev/skills | yes/no |
 
 For missing skills, suggest: `npx -y skills add <source> --skill <name> --agent claude-code -g`
 

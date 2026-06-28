@@ -12,9 +12,9 @@ const C = p => path.join(HOME, '.claude', p);
 const GARAGE_PLUGINS = [
   'claude-code-statusline',
   'patent-disclosure-skill',
-  'nature-skills',
   'gpt-image-2',
   'muselinn-toolkit',
+  'kimi-vision-mcp',
 ];
 
 const OFFICIAL_PLUGINS = [
@@ -26,15 +26,14 @@ const OFFICIAL_PLUGINS = [
   { name: 'feature-dev', marketplace: 'claude-plugins-official' },
   { name: 'document-skills', marketplace: 'anthropic-agent-skills' },
   { name: 'obsidian', marketplace: 'obsidian-skills' },
-  { name: 'nature-skills', marketplace: 'nature-skills' },
 ];
 
 // Recommended standalone skills (installed via npx skills add, not plugins)
 const RECOMMENDED_SKILLS = [
   { name: 'find-skills', source: 'vercel-labs/skills', description: 'Meta-skill — discover and install other skills' },
+  { name: 'markitdown', source: 'julianobarbosa/claude-code-skills', description: 'Convert files (PDF, DOCX, XLSX, PPTX, images, audio) to Markdown' },
   { name: 'fpga', source: 'mindrally/skills', description: 'FPGA development — Vivado, SystemVerilog, timing closure, AXI' },
   { name: 'vercel-react-best-practices', source: 'vercel-labs/agent-skills', description: 'React & Next.js performance optimization from Vercel' },
-  { name: 'remotion-best-practices', source: 'remotion-dev/skills', description: 'Remotion video framework best practices' },
 ];
 
 function rjson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } }
@@ -148,7 +147,11 @@ function checkSettings() {
   return {
     hasSettings: true,
     statusLine: !!(sf.statusLine && sf.statusLine.command),
-    deepseek: (env.ANTHROPIC_BASE_URL || '').includes('deepseek'),
+    baseUrl: env.ANTHROPIC_BASE_URL || '(not set)',
+    provider: (env.ANTHROPIC_BASE_URL || '').includes('deepseek') ? 'deepseek-direct'
+      : env.ANTHROPIC_BASE_URL === 'http://127.0.0.1:15721' ? 'opencode-go-proxy'
+      : env.ANTHROPIC_BASE_URL ? 'custom-proxy'
+      : 'anthropic-direct',
     hasToken: !!(env.ANTHROPIC_AUTH_TOKEN),
     model: env.ANTHROPIC_MODEL || '',
     hasImageKey: !!(env.OPENAI_IMAGE_API_KEY || ((rjson(C('settings.local.json')) || {}).env || {}).OPENAI_IMAGE_API_KEY),
@@ -162,8 +165,20 @@ function checkStatusline() {
   const sp = C('statusline.js');
   if (!fs.existsSync(sp)) return { exists: false };
   const src = fs.readFileSync(sp, 'utf8');
-  const vMatch = src.match(/Edition \(v(\d+)\)/);
-  return { exists: true, version: vMatch ? 'v' + vMatch[1] : 'unknown', size: src.length };
+  const first = src.split('\n')[0].replace(/^\/\/\s*/, '');
+  return { exists: true, header: first, size: src.length };
+}
+
+// ── statusline-config (opencode go) ────────────────────────────────────────────
+function checkStatuslineConfig() {
+  const cf = rjson(C('statusline-config.json'));
+  if (!cf) return { exists: false };
+  return {
+    exists: true,
+    opencodeGoEnabled: cf.OPENCODE_GO_ENABLED === 'true',
+    hasAuthCookie: !!(cf.OPENCODE_GO_AUTH_COOKIE),
+    hasWorkspaceId: !!(cf.OPENCODE_GO_WORKSPACE_ID),
+  };
 }
 
 // ── gather ───────────────────────────────────────────────────────────────────
@@ -174,6 +189,7 @@ const standaloneSkills = findStandaloneSkills();
 const settings = checkSettings();
 const statusline = checkStatusline();
 const matlab = checkMatlab();
+const statuslineConfig = checkStatuslineConfig();
 
 const garageReport = GARAGE_PLUGINS.map(name => ({
   name, installed: !!plugins[name], version: plugins[name] ? plugins[name].version : null,
@@ -198,6 +214,7 @@ console.log(JSON.stringify({
   },
   settings,
   statusline,
+  statuslineConfig,
   matlab,
   marketplaces,
   mcp_servers: mcpServers,
