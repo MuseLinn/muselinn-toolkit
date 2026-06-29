@@ -15,6 +15,7 @@ const GARAGE_PLUGINS = [
   'gpt-image-2',
   'muselinn-toolkit',
   'kimi-vision-mcp',
+  'literature-survey-agent-swarm',
 ];
 
 const OFFICIAL_PLUGINS = [
