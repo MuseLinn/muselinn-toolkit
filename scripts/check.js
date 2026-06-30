@@ -16,6 +16,7 @@ const GARAGE_PLUGINS = [
   'muselinn-toolkit',
   'kimi-vision-mcp',
   'literature-survey-agent-swarm',
+  'image-extender-plugin',
 ];
 
 const OFFICIAL_PLUGINS = [
